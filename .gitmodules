@@ -1,0 +1,3 @@
+[submodule "01_stanford_CS231n/lecture_site"]
+	path = 01_stanford_CS231n/lecture_site
+	url = https://github.com/cs231n/cs231n.github.io.git
