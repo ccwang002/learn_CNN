@@ -1,5 +1,6 @@
 from collections import Counter
 import numpy as np
+from scipy.spatial.distance import cdist
 
 class KNearestNeighbor:
     """ a kNN classifier with L2 distance """
@@ -89,22 +90,24 @@ class KNearestNeighbor:
         num_test = X.shape[0]
         num_train = self.X_train.shape[0]
         # dists = np.zeros((num_test, num_train))
-        #########################################################################
-        # TODO:                                                                 #
-        # Compute the l2 distance between all test points and all training      #
-        # points without using any explicit loops, and store the result in      #
-        # dists.                                                                #
-        # HINT: Try to formulate the l2 distance using matrix multiplication    #
-        #       and two broadcast sums.                                         #
-        #########################################################################
-        # force broadcasting
-        dists = np.sum(
-            np.square(X[:, None, :] - self.X_train),
-            axis=-1
-        )
-        #########################################################################
-        #                         END OF YOUR CODE                              #
-        #########################################################################
+        # TRY 1: Force broadcasting
+        # this works but requires great amount of memory copying
+        # dists = np.sum(
+        #     np.square(X[:, np.newaxis, :] - self.X_train[np.newaxis, :, :]),
+        #     axis=-1
+        # )
+        # TRY 2: Use Scipy (6.46s)
+        # dists = cdist(X, self.X_train, 'sqeuclidean')
+        # TRY 3: Use matrix multiplication (0.205s)
+        # adapt from sklearn.metrics.pairwise.euclidean_distances
+        XX = np.sum(X * X, axis=1)[:, np.newaxis]
+        YY = np.sum(self.X_train * self.X_train, axis=1)[np.newaxis, :]
+        dists = np.dot(X, self.X_train.T)
+        dists *= -2
+        dists += XX
+        dists += YY
+        # numerical stability
+        np.maximum(dists, 0, out=dists)
         return dists
 
     def predict_labels(self, dists, k=1):
