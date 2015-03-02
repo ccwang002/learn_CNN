@@ -17,18 +17,32 @@ def softmax_loss_naive(W, X, y, reg):
     # Initialize the loss and gradient to zero.
     loss = 0.0
     dW = np.zeros_like(W)
+    num_train = X.shape[1]
+    f = W.dot(X)  # shape: C x N
+    p = np.zeros(num_train, dtype=np.float)
 
-    ###########################################################################
-    # TODO: Compute the softmax loss and its gradient using explicit loops.   #
-    # Store the loss in loss and the gradient in dW. If you are not careful   #
-    # here, it is easy to run into numeric instability. Don't forget the      #
-    # regularization!                                                         #
-    ###########################################################################
+    for i in range(num_train):
+        f_i = f[:, i].copy()  # shape C x 1
+        f_i -= np.max(f_i)
+        f_i = np.exp(f_i)
+        x_i = X[:, i]
+        all_class_p_i = f_i / np.sum(f_i)
+        p[i] = all_class_p_i[y[i]]
 
-    ###########################################################################
-    #                          END OF YOUR CODE                               #
-    ###########################################################################
+        # Update gradient
+        # all_class_p_i no used later, don't copy
+        dw_x_weight_i = all_class_p_i
+        dw_x_weight_i[y[i]] -= 1
+        dW -= dw_x_weight_i[:, np.newaxis] * x_i[np.newaxis, :]
 
+    loss += np.mean(-np.log(p))
+    # Add regularization
+    loss += 0.5 * reg * np.sum(W * W)
+
+    # Gradient
+    # ref: http://ufldl.stanford.edu/wiki/index.php/Softmax_Regression
+    dW /= -num_train
+    dW += reg * W
     return loss, dW
 
 
