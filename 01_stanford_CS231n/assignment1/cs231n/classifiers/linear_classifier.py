@@ -74,15 +74,8 @@ class LinearClassifier:
         array of length N, and each element is an integer giving the predicted
         class.
         """
-        y_pred = np.zeros(X.shape[1])
-        ###########################################################################
-        # TODO:                                                                   #
-        # Implement this method. Store the predicted labels in y_pred.            #
-        ###########################################################################
-        pass
-        ###########################################################################
-        #                           END OF YOUR CODE                              #
-        ###########################################################################
+        score_pred = self.W.dot(X)  # shape: C x N
+        y_pred = score_pred.argmax(axis=0)
         return y_pred
 
     def loss(self, X_batch, y_batch, reg):
@@ -99,7 +92,7 @@ class LinearClassifier:
         - loss as a single float
         - gradient with respect to self.W; an array of the same shape as W
         """
-        pass
+        raise NotImplementedError
 
 
 class LinearSVM(LinearClassifier):
