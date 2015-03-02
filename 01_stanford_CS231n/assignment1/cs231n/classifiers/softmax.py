@@ -55,4 +55,24 @@ def softmax_loss_vectorized(W, X, y, reg):
     # Initialize the loss and gradient to zero.
     loss = 0.0
     dW = np.zeros_like(W)
+    num_train = X.shape[1]
+    _train_ix = np.arange(num_train)  # for sample coord 0...N-1
+
+    f = W.dot(X)  # shape: C x N
+    f -= np.max(f, axis=0)
+    f = np.exp(f)
+    p = f / np.sum(f, axis=0)  # shape: C x N
+
+    # loss function
+    loss += np.mean(-np.log(p[y, _train_ix]))
+    loss += 0.5 * reg * np.sum(W * W)
+
+    # gradient
+    dW_x_weight = p  # no use p later, don't copy
+    dW_x_weight[y, _train_ix] -= 1
+    # CxD -= CxN dot NxD
+    dW -= dW_x_weight.dot(X.T)
+    dW /= -num_train
+    dW += reg * W
+
     return loss, dW
