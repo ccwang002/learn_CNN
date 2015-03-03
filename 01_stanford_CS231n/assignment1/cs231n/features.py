@@ -14,7 +14,7 @@ def extract_features(imgs, feature_fns, verbose=False):
         - imgs: N x H X W X C array of pixel data for N images.
         - feature_fns:
           List of k feature functions. The ith feature function should
-          take as input an H x W x D array and return a (one-dimensional) array
+          take as input an H x W x C array and return a (one-dimensional) array
           of length F_i.
         - verbose: Boolean; if true, print progress.
 
@@ -31,10 +31,10 @@ def extract_features(imgs, feature_fns, verbose=False):
     first_image_features = []
     for feature_fn in feature_fns:
         feats = feature_fn(imgs[0].squeeze())
-        assert(
-            len(feats.shape) == 1,
+        assert len(feats.shape) == 1, (
             'Feature functions must be one-dimensional'
         )
+
         feature_dims.append(feats.size)
         first_image_features.append(feats)
 
@@ -94,7 +94,7 @@ def hog_feature(im):
     if im.ndim == 3:
         image = rgb2gray(im)
     else:
-        image = np.at_least_2d(im)
+        image = np.atleast_2d(im)
 
     sx, sy = image.shape  # image size
     orientations = 9  # number of gradient bins
