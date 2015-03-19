@@ -23,7 +23,7 @@ def softmax_loss_naive(W, X, y, reg):
 
     for i in range(num_train):
         f_i = f[:, i].copy()  # shape C x 1
-        f_i -= np.max(f_i)
+        f_i -= np.max(f_i)    # improve numerical stability
         f_i = np.exp(f_i)
         x_i = X[:, i]
         all_class_p_i = f_i / np.sum(f_i)
@@ -59,7 +59,7 @@ def softmax_loss_vectorized(W, X, y, reg):
     _train_ix = np.arange(num_train)  # for sample coord 0...N-1
 
     f = W.dot(X)  # shape: C x N
-    f -= np.max(f, axis=0)
+    f -= np.max(f, axis=0)  # improve numerical stability
     f = np.exp(f)
     p = f / np.sum(f, axis=0)  # shape: C x N
 
@@ -68,6 +68,7 @@ def softmax_loss_vectorized(W, X, y, reg):
     loss += 0.5 * reg * np.sum(W * W)
 
     # gradient
+    # ref: http://ufldl.stanford.edu/wiki/index.php/Softmax_Regression
     dW_x_weight = p  # no use p later, don't copy
     dW_x_weight[y, _train_ix] -= 1
     # CxD -= CxN dot NxD
