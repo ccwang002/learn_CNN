@@ -96,7 +96,7 @@ def two_layer_net(X, model, y=None, reg=0.0):
     loss = None
     f = scores.T - np.max(scores, axis=1)  # shape (C, N)
     f = np.exp(f)
-    p = f / np.sum(f, axis=0)
+    p = f / np.sum(f, axis=0)  # shape (C, N)
 
     # loss function
     _sample_ix = np.arange(N)
@@ -106,14 +106,25 @@ def two_layer_net(X, model, y=None, reg=0.0):
 
     # compute the gradients
     grads = {}
-    #############################################################################
-    # TODO: Compute the backward pass, computing the derivatives of the weights #
-    # and biases. Store the results in the grads dictionary. For example,       #
-    # grads['W1'] should store the gradient on W1, and be a matrix of same size #
-    #############################################################################
-    pass
-    #############################################################################
-    #                              END OF YOUR CODE                             #
-    #############################################################################
 
+    df = p  # (C, N)
+    df[y, _sample_ix] -= 1
+    # (H, C) = ((C, N) x (N, H)).T
+    dW2 = df.dot(resp1).T / N  # (H, C)
+    dW2 += reg * W2
+    grads['W2'] = dW2
+
+    # C = (C, N)
+    db2 = np.mean(df, axis=1)  # C
+    grads['b2'] = db2
+
+    # (N, H) =  (H, C)
+    dresp1 = W2.dot(df).T / N
+    ds1 = np.where(s1 > 0, dresp1, 0)  # (N, H)
+    dW1 = X.T.dot(ds1)  # (D, H)
+    dW1 += reg * W1
+    grads['W1'] = dW1
+
+    db1 = np.sum(ds1, axis=0)  # H
+    grads['b1'] = db1
     return loss, grads
