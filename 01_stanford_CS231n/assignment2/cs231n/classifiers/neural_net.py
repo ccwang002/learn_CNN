@@ -60,7 +60,7 @@ def two_layer_net(X, model, y=None, reg=0.0):
     - reg: Regularization strength.
 
     Returns:
-    If y not is passed, return a matrix scores of shape (N, C) where
+    If y is passed, return a matrix scores of shape (N, C) where
     scores[i, c] is the score for class c on input X[i].
 
     If y is not passed, instead return a tuple of:
@@ -76,16 +76,17 @@ def two_layer_net(X, model, y=None, reg=0.0):
     N, D = X.shape
 
     # compute the forward pass
-    scores = None
-    #############################################################################
-    # TODO: Perform the forward pass, computing the class scores for the input. #
-    # Store the result in the scores variable, which should be an array of      #
-    # shape (N, C).                                                             #
-    #############################################################################
-    pass
-    #############################################################################
-    #                              END OF YOUR CODE                             #
-    #############################################################################
+    scores = None   # shape (N, C)
+
+    # Layer 1
+    # ReLU forward implementation
+    # Ref: http://cs231n.github.io/neural-networks-1/
+    s1 = X.dot(W1) + b1  # shape (N, H)
+    resp1 = np.where(s1 > 0, s1, 0)  # shape (N, H)
+
+    # Layer 2
+    s2 = resp1.dot(W2) + b2  # shape (N, C)
+    scores = s2
 
     # If the targets are not given then jump out, we're done
     if y is None:
@@ -93,17 +94,15 @@ def two_layer_net(X, model, y=None, reg=0.0):
 
     # compute the loss
     loss = None
-    #############################################################################
-    # TODO: Finish the forward pass, and compute the loss. This should include  #
-    # both the data loss and L2 regularization for W1 and W2. Store the result  #
-    # in the variable loss, which should be a scalar. Use the Softmax           #
-    # classifier loss. So that your results match ours, multiply the            #
-    # regularization loss by 0.5                                                #
-    #############################################################################
-    pass
-    #############################################################################
-    #                              END OF YOUR CODE                             #
-    #############################################################################
+    f = scores.T - np.max(scores, axis=1)  # shape (C, N)
+    f = np.exp(f)
+    p = f / np.sum(f, axis=0)
+
+    # loss function
+    _sample_ix = np.arange(N)
+    loss = np.mean(-np.log(p[y, _sample_ix]))
+    loss += (0.5 * reg) * np.sum(W1 * W1)
+    loss += (0.5 * reg) * np.sum(W2 * W2)
 
     # compute the gradients
     grads = {}
@@ -118,3 +117,36 @@ def two_layer_net(X, model, y=None, reg=0.0):
     #############################################################################
 
     return loss, grads
+
+
+def softmax_loss_vectorized(W, X, y, reg):
+    """
+    Softmax loss function, vectorized version.
+
+    Inputs and outputs are the same as softmax_loss_naive.
+    """
+    # Initialize the loss and gradient to zero.
+    loss = 0.0
+    dW = np.zeros_like(W)
+    num_train = X.shape[1]
+    _train_ix = np.arange(num_train)  # for sample coord 0...N-1
+
+    f = W.dot(X)  # shape: C x N
+    f -= np.max(f, axis=0)  # improve numerical stability
+    f = np.exp(f)
+    p = f / np.sum(f, axis=0)  # shape: C x N
+
+    # loss function
+    loss += np.mean(-np.log(p[y, _train_ix]))
+    loss += 0.5 * reg * np.sum(W * W)
+
+    # gradient
+    # ref: http://ufldl.stanford.edu/wiki/index.php/Softmax_Regression
+    dW_x_weight = p  # no use p later, don't copy
+    dW_x_weight[y, _train_ix] -= 1
+    # CxD -= CxN dot NxD
+    dW -= dW_x_weight.dot(X.T)
+    dW /= -num_train
+    dW += reg * W
+
+    return loss, dW
