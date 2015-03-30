@@ -4,7 +4,7 @@ class ClassifierTrainer(object):
     def __init__(self):
         self.step_cache = {}  # for storing velocities in momentum update
 
-    def train(self, X, y, X_val, y_val,
+    def train(self, X, y, X_val, y_val,     # noqa for complexity
               model, loss_function,
               reg=0.0,
               learning_rate=1e-2, momentum=0, learning_rate_decay=0.95,
@@ -58,7 +58,10 @@ class ClassifierTrainer(object):
         N = X.shape[0]
 
         if sample_batches:
-            iterations_per_epoch = N / batch_size  # using SGD
+            # one epoch means fully seen all samples
+            if N % batch_size != 0:
+                raise ValueError('batch_size does not match sample size')
+            iterations_per_epoch = int(N / batch_size)  # using SGD
         else:
             iterations_per_epoch = 1  # using GD
         num_iters = num_epochs * iterations_per_epoch
@@ -74,6 +77,7 @@ class ClassifierTrainer(object):
 
             # get batch of data
             if sample_batches:
+                # SGD used
                 batch_mask = np.random.choice(N, batch_size)
                 X_batch = X[batch_mask]
                 y_batch = y[batch_mask]
@@ -94,27 +98,20 @@ class ClassifierTrainer(object):
                 elif update == 'momentum':
                     if p not in self.step_cache:
                         self.step_cache[p] = np.zeros(grads[p].shape)
-                    dx = np.zeros_like(grads[p])   # you can remove this after
-
-                    # TODO: implement the momentum update formula and store the
-                    # step update into variable dx. You should use the variable
-                    # step_cache[p] and the momentum strength is stored in
-                    # momentum. Don't forget to also update the step_cache[p].
-                    pass
-                    # END OF YOUR CODE
+                    current_direction = - learning_rate * grads[p]
+                    dx = self.step_cache[p] * momentum + current_direction
+                    self.step_cache[p] = dx
 
                 elif update == 'rmsprop':
                     decay_rate = 0.99   # you could also make this an option
                     if p not in self.step_cache:
                         self.step_cache[p] = np.zeros(grads[p].shape)
-                    dx = np.zeros_like(grads[p])   # you can remove this after
-
-                    # TODO: implement the RMSProp update and store the
-                    # parameter update dx. Don't forget to also update
-                    # step_cache[p]. Use smoothing 1e-8
-                    pass
-                    # END OF YOUR CODE
-
+                    new_cache = (
+                        decay_rate * self.step_cache[p] +
+                        (1 - decay_rate) * (grads[p] ** 2)
+                    )
+                    self.step_cache[p] = new_cache
+                    dx = - learning_rate * grads[p] / np.sqrt(new_cache + 1e-8)
                 else:
                     raise ValueError('Unrecognized update type "%s"' % update)
 
