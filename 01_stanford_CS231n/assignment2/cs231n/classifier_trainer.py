@@ -10,7 +10,7 @@ class ClassifierTrainer(object):
               learning_rate=1e-2, momentum=0, learning_rate_decay=0.95,
               update='momentum', sample_batches=True,
               num_epochs=30, batch_size=100, acc_frequency=None,
-              verbose=False):
+              progress_bar=None, verbose=False):
         """
         Optimize the parameters of a model to minimize a loss function. We use
         training data X and y to compute the loss and gradients, and
@@ -65,6 +65,9 @@ class ClassifierTrainer(object):
         else:
             iterations_per_epoch = 1  # using GD
         num_iters = num_epochs * iterations_per_epoch
+        if progress_bar:
+            progress_bar.max = num_iters
+            progress_bar.value = 0
         epoch = 0
         best_val_acc = 0.0
         best_model = {}
@@ -72,7 +75,10 @@ class ClassifierTrainer(object):
         train_acc_history = []
         val_acc_history = []
         for it in range(num_iters):
-            if it % 10 == 0:
+            if progress_bar:
+                progress_bar.value += 1
+            elif it % 50 == 0:
+                # show iteration indicator every 50 iterations
                 print('starting iteration ', it)
 
             # get batch of data
