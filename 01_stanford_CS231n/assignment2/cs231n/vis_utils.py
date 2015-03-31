@@ -1,5 +1,8 @@
 from math import sqrt, ceil
 import numpy as np
+from IPython.html import widgets
+from IPython.display import Javascript
+
 
 def visualize_grid(Xs, ubound=255.0, padding=1):
     """
@@ -74,4 +77,104 @@ def vis_nn(rows):
     return G
 
 
+class ParametersInspectorWindow:
+    instance = None
 
+    def __init__(self, ipython, params):
+        # singleton pattern
+        if ParametersInspectorWindow.instance:
+            raise Exception(
+                "Only one instance of the Variable Inspector can exist "
+                "at a time. Call close() on the active instance before "
+                "creating a new instance. \n"
+                "If you have lost the handle to the active instance, "
+                "you can re-obtain it via "
+                "`ParametersInspectorWindow.instance`."
+            )
+
+        ParametersInspectorWindow.instance = self
+        self.closed = False
+        self._value = params
+        # construct widget
+        self._box = widgets.Box()
+        self._box._dom_classes = ['inspector']
+        self._box.background_color = '#fff'
+        self._box.border_color = '#ccc'
+        self._box.border_width = 1
+        self._box.border_radius = 5
+
+        self._modal_body = widgets.VBox()
+        self._modal_body.overflow_y = 'scroll'
+        self._modal_body.padding = '0 10px 0'
+        # self._modal_body.width = '300px'
+        # self._modal_body.height = '600px'
+
+        self._modal_body_label = widgets.HTML(value='Not hooked')
+        self._modal_body.children = [self._modal_body_label]
+
+        self._box.children = [
+            self._modal_body,
+        ]
+
+        self._ipython = ipython
+        self._ipython.events.register('post_run_cell', self._fill)
+
+    def close(self):
+        """Close and remove hooks."""
+        if not self.closed:
+            self._ipython.events.unregister('post_run_cell', self._fill)
+            self._box.close()
+            self.closed = True
+            ParametersInspectorWindow.instance = None
+
+    def _fill(self):
+        """Fill self with variable information."""
+        try:
+            self._modal_body_label.value = (
+                '<h4>Inspector</h4>'
+                '<table class="table table-bordered table-striped">'
+                '<tr><th>Parameter</th><th>Value</th></tr>'
+                '<tr><td>' +
+                '</td></tr><tr><td>'.join([
+                    '{0}</td><td>{1}</td>'.format(k, v)
+                    for k, v in self.value.items()
+                ]) +
+                '</td></tr>'
+                '</table>'
+            )
+        except:
+            self._modal_body_label.value = (
+                '<h4>Inspector</h4>'
+                '<p style="color: red"><b>ERROR</b> '
+                'failed to obtain <code>self.value</code></p>'
+            )
+
+    def _ipython_display_(self):
+        """Called when display() or pyout is used to display the Variable
+        Inspector."""
+        self._box._ipython_display_()
+
+    def detach(self):
+        return Javascript("""
+            $('div.inspector')
+            .detach()
+            .prependTo($('body'))
+            .css({
+                'z-index': 999,
+                position: 'fixed',
+                width: 'auto',
+                'box-shadow': '5px 5px 12px -3px black',
+                opacity: 0.9
+            })
+            .draggable()
+            .resizable();
+        """)
+
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, value):
+        self._value = value
+        self._fill()
