@@ -17,10 +17,8 @@ def affine_forward(x, w, b):
     - out: output, of shape (N, M)
     - cache: (x, w, b)
     """
-    out = None
-    # TODO: Implement the affine forward pass. Store the result in out. You
-    # will need to reshape the input into rows.
-    # END OF CODE
+    N = x.shape[0]
+    out = x.reshape(N, -1).dot(w) + b
     cache = (x, w, b)
     return out, cache
 
@@ -41,10 +39,10 @@ def affine_backward(dout, cache):
     - db: Gradient with respect to b, of shape (M,)
     """
     x, w, b = cache
-    dx, dw, db = None, None, None
-    # TODO: Implement the affine backward pass.
-    pass
-    # END OF CODE
+    N = x.shape[0]
+    dw = x.reshape(N, -1).T.dot(dout)
+    db = np.sum(dout, axis=0)
+    dx = dout.dot(w.T).reshape(x.shape)
     return dx, dw, db
 
 
@@ -59,14 +57,7 @@ def relu_forward(x):
     - out: Output, of the same shape as x
     - cache: x
     """
-    out = None
-
-    # TODO: Implement the ReLU forward pass.
-
-    pass
-
-    # END OF YOUR CODE
-
+    out = np.where(x > 0, x, 0)
     cache = x
     return out, cache
 
@@ -82,11 +73,8 @@ def relu_backward(dout, cache):
     Returns:
     - dx: Gradient with respect to x
     """
-    dx, x = None, cache
-    # TODO: Implement the ReLU backward pass.
-    pass
-    # END OF YOUR CODE
-
+    x = cache
+    dx = np.where(x > 0, dout, 0)
     return dx
 
 
