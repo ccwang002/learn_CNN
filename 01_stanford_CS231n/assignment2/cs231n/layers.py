@@ -101,11 +101,35 @@ def conv_forward_naive(x, w, b, conv_param):
       W' = 1 + (W + 2 * pad - WW) / stride
     - cache: (x, w, b, conv_param)
     """
-    out = None
-    # TODO: Implement the convolutional forward pass.
-    # Hint: you can use the function np.pad for padding.
-    pass
-    # END OF YOUR CODE
+    def convolute_per_filter(filter_th, x):
+        temp_out = np.zeros((Hout, Wout), dtype=np.float64)
+        for h_ix in range(Hout):
+            for w_ix in range(Wout):
+                h_offset = h_ix * stride
+                w_offset = w_ix * stride
+                receptive_field = np.s_[
+                    :,                      # all channels (C)
+                    h_offset:h_offset + HH,
+                    w_offset:w_offset + WW
+                ]
+                temp_out[h_ix, w_ix] = (
+                    np.sum(x[receptive_field] * w[filter_th]) + b[filter_th]
+                )
+        return temp_out
+
+    pad, stride = conv_param['pad'], conv_param['stride']
+    N, C, H, W = x.shape
+    F, _, HH, WW = w.shape
+    Hout = 1 + (H + 2 * pad - HH) // stride
+    Wout = 1 + (W + 2 * pad - WW) // stride
+    padded_x = np.pad(
+        x, ((0, 0), (0, 0), (pad, pad), (pad, pad)),
+        mode='constant', constant_values=0
+    )
+    out = np.zeros((N, F, Hout, Wout), dtype=np.float64)
+    for i in range(N):
+        for filter_th in range(F):
+            out[i, filter_th] = convolute_per_filter(filter_th, padded_x[i])
     cache = (x, w, b, conv_param)
     return out, cache
 
