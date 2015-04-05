@@ -11,7 +11,7 @@ def im2col_cython(np.ndarray[DTYPE_t, ndim=4] x, int field_height,
     cdef int C = x.shape[1]
     cdef int H = x.shape[2]
     cdef int W = x.shape[3]
-    
+
     cdef int HH = (H + 2 * padding - field_height) / stride + 1
     cdef int WW = (W + 2 * padding - field_width) / stride + 1
 
@@ -39,7 +39,7 @@ def im2col_cython(np.ndarray[DTYPE_t, ndim=4] x, int field_height,
     #                     for i in range(N):
     #                         col = yy * WW * N + xx * N + i
     #                         cols[row, col] = x_padded[i, c, stride * yy + ii, stride * xx + jj]
-    
+
     return cols
 
 
@@ -71,7 +71,7 @@ def col2im_cython(np.ndarray[DTYPE_t, ndim=2] cols, int N, int C, int H, int W,
 
     # Moving the inner loop to a C-function with no bounds checking improves
     # performance quite a bit for col2im.
-    col2im_cython_inner(cols, x_padded, N, C, H, W, HH, WW, 
+    col2im_cython_inner(cols, x_padded, N, C, H, W, HH, WW,
                         field_height, field_width, padding, stride)
     if padding > 0:
         return x_padded[:, :, padding:-padding, padding:-padding]
