@@ -1,5 +1,5 @@
 import numpy as np
-# import matplotlib.pyplot as plt
+
 
 def init_two_layer_model(input_size, hidden_size, output_size):
     """Initialize the weights and biases for a two-layer fully connected
@@ -29,6 +29,7 @@ def init_two_layer_model(input_size, hidden_size, output_size):
     model['W2'] = 0.00001 * np.random.randn(hidden_size, output_size)
     model['b2'] = np.zeros(output_size)
     return model
+
 
 def two_layer_net(X, model, y=None, reg=0.0):
     """Compute the loss and gradients for a two layer fully connected NN.
