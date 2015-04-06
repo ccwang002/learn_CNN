@@ -61,10 +61,10 @@ def two_layer_net(X, model, y=None, reg=0.0):
     - reg: Regularization strength.
 
     Returns:
-    If y is passed, return a matrix scores of shape (N, C) where
+    If y is not passed, return a matrix scores of shape (N, C) where
     scores[i, c] is the score for class c on input X[i].
 
-    If y is not passed, instead return a tuple of:
+    If y is passed, instead return a tuple of:
     - loss: Loss (data loss and regularization loss) for this batch of training
       samples.
     - grads: Dictionary mapping parameter names to gradients of those
