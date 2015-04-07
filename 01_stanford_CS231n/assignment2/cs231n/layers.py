@@ -1,3 +1,4 @@
+from operator import itemgetter
 import numpy as np
 
 def affine_forward(x, w, b):
@@ -117,7 +118,7 @@ def conv_forward_naive(x, w, b, conv_param):
                 )
         return temp_out
 
-    pad, stride = conv_param['pad'], conv_param['stride']
+    pad, stride = itemgetter('pad', 'stride')(conv_param)
     N, C, H, W = x.shape
     F, _, HH, WW = w.shape
     Hout = 1 + (H + 2 * pad - HH) // stride
@@ -164,7 +165,7 @@ def conv_backward_naive(dout, cache):
     N, F, Hout, Wout = dout.shape
     _, C, H, W = x.shape
     _, _, HH, WW = w.shape
-    stride, pad = conv_param['stride'], conv_param['pad']
+    pad, stride = itemgetter('pad', 'stride')(conv_param)
     padded_x = np.pad(
         x, ((0, 0), (0, 0), (pad, pad), (pad, pad)),
         mode='constant', constant_values=0
@@ -213,10 +214,13 @@ def max_pool_forward_naive(x, pool_param):
                 )
 
     N, C, H, W = x.shape
-    pool_h, pool_w, stride = map(
-        lambda k: pool_param[k],
-        ['pool_height', 'pool_width', 'stride']
-    )
+    # pool_h, pool_w, stride = map(
+    #     lambda k: pool_param[k],
+    #     ['pool_height', 'pool_width', 'stride']
+    # )
+    pool_h, pool_w, stride = itemgetter(
+        'pool_height', 'pool_width', 'stride'
+    )(pool_param)
     HH = (H - pool_h) // stride + 1
     WW = (H - pool_w) // stride + 1
     out = np.zeros((N, C, HH, WW))
